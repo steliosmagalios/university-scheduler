@@ -65,12 +65,17 @@ createRoomDomains([room(Id, _, _, Availability) | RestRooms], [(Id, CurrDom) | R
 
 makeGroupDomains(Groups, GroupDomains) :-
   findall(group(Id, Count, Overlaps), group(Id, Count, Overlaps), Groups),
-  createGroupDomains(Groups, GroupDomains).
 
-createGroupDomains([], []).
+  % Calculate total week duration
+  daySettings(DayLength, WeekDays),
+  TotalDuration is DayLength * WeekDays - 1, % Starting from 0
 
-createGroupDomains([group(Id, _, _) | RestGroups], [(Id, CurrDom) | RestDoms]) :-
-  CurrDom #:: 69, % 5 days * 14 hours per day
+  createGroupDomains(Groups, GroupDomains, TotalDuration).
+
+createGroupDomains([], [], _).
+
+createGroupDomains([group(Id, _, _) | RestGroups], [(Id, CurrDom) | RestDoms], TotalDuration) :-
+  CurrDom #:: 0..TotalDuration,
   createGroupDomains(RestGroups, RestDoms).
 
 % =============================================================
@@ -125,9 +130,6 @@ applyLectureConstraints(
   [task(Id, RoomId, StartTime) | Tasks],
   ProfDomains, RoomDomains, GroupDomains, Professors, Rooms, Groups
 ) :-
-  % TODO: StartTime find
-  % TODO: RoomId find
-
   % Get professor domains and get their intersection
   intersectResourceDomains(ProfessorIds, ProfDomains, IntersectedProfessors),
 
@@ -141,6 +143,7 @@ applyLectureConstraints(
   findRoomsOfType(Rooms, RoomType, RelevantRoomIds),
 
   % Make reified constraint for room
+  % TODO: RoomId find
   fail,
 
   % Constraint: the room must be available at the same time as the other domain ???
@@ -162,6 +165,13 @@ applyLectureConstraints(
 
   applyLectureConstraints(Lectures, Tasks, ProfDomains, RoomDomains, GroupDomains, Professors, Rooms, Groups).
 
+
+% task(lectureId, roomId, startTime).
+getDecisionVars([], []).
+
+getDecisionVars([task(_, RoomId, StartTime) | Tasks], [RoomId, StartTime|Vars]) :-
+  getDecisionVars(Tasks, Vars).
+
 % =============================================================
 
 schedule(Tasks) :-
@@ -180,8 +190,12 @@ schedule(Tasks) :-
    Professors,  Rooms,       Groups
   ),
 
+  % Apply constraint for all groups containing same members
+  fail,
+
   % Makespan
   fail,
 
   % Run branch and bound
-  fail.
+  getDecisionVars(Tasks, DesicionVars),
+  bb_min(labeling(DesicionVars), 0, _).
