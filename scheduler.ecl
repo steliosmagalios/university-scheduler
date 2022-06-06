@@ -165,6 +165,15 @@ applyLectureConstraints(
 
   applyLectureConstraints(Lectures, Tasks, ProfDomains, RoomDomains, GroupDomains, Professors, Rooms, Groups).
 
+% applyGroupConstraints(Groups, GroupDomains).
+applyGroupConstraints([], []).
+
+applyGroupConstraints([Group | Groups], [Domain | Domains]) :-
+  % For every group, make all groups with overlaps
+  % not available at the same time
+  fail,
+
+  applyGroupConstraints(Groups, Domains).
 
 % task(lectureId, roomId, startTime).
 getDecisionVars([], []).
