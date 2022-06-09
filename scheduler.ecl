@@ -1,4 +1,6 @@
 % Library imports
+:- use_module("./custom_mod").
+
 :- lib(ic).
 :- lib(ic_global).
 :- lib(branch_and_bound).
