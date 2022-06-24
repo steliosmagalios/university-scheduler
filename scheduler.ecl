@@ -36,20 +36,20 @@ group("g2", 25, ["g1"]).
 group("g3", 50, ["g1"]).
 
 
-applyLectureConstraints([], _Professors, _Groups, _Rooms, []).
+apply_lecture_constraints([], _Professors, _Groups, _Rooms, []).
 
-applyLectureConstraints([CurrLec | Lectures], Professors, Groups, Rooms, [CurrTask | Tasks]) :-
+apply_lecture_constraints([CurrLec | Lectures], Professors, Groups, Rooms, [CurrTask | Tasks]) :-
   % Get the lecture's professors intersected domain
-  getProfessorDomains(CurrLec, Professors, ProfessorDomains),
+  get_professor_domains(CurrLec, Professors, ProfessorDomains),
 
   % Get room's with correct type and enough capacity
-  getRoomDomain(CurrLec, Rooms, Groups, RoomId, RoomDomain),
+  get_room_domain(CurrLec, Rooms, Groups, RoomId, RoomDomain),
 
   % Create the lectures decision variables and create the task
-  createDecisionVars(CurrLec, ProfessorDomains, RoomId, RoomDomain, CurrTask),
+  create_decision_vars(CurrLec, ProfessorDomains, RoomId, RoomDomain, CurrTask),
 
   % Continue the next lecture
-  applyLectureConstraints(Lectures, Professors, Groups, Rooms, Tasks).
+  apply_lecture_constraints(Lectures, Professors, Groups, Rooms, Tasks).
 
 
 
@@ -78,7 +78,7 @@ schedule(Tasks) :-
 %%% This version is the main schedule/? predicate.
 schedule(Lectures, Professors, Groups, Rooms, Tasks) :-
   % Apply constraints for every lecture
-  applyLectureConstraints(Lectures, Professors, Groups, Rooms, Tasks),
+  apply_lecture_constraints(Lectures, Professors, Groups, Rooms, Tasks),
 
   % Constraints for professors
   % TODO 2022-Jun-24: Every lecture a professor teaches must not occur at the same time
@@ -93,6 +93,6 @@ schedule(Lectures, Professors, Groups, Rooms, Tasks) :-
   fail,
 
   % Calculate makespan from tasks and call bb_min
-  calculateMakespan(Tasks, Goal),
-  getVarsFromTasks(Tasks, TaskVars), % Get the variables from the tasks
+  calculate_makespan(Tasks, Goal),
+  get_vars_from_tasks(Tasks, TaskVars), % Get the variables from the tasks
   bb_min(labeling(TaskVars), Goal, _). % Test other bb strategies

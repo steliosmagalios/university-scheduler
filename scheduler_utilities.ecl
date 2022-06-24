@@ -3,52 +3,52 @@
 :- lib(ic).
 
 :- export custom_mod/3.
-:- export intersectLists/2.
+:- export intersect_lists/2.
 
-:- export getRoomDomain/5.
-:- export calculateMakespan/2.
-:- export getProfessorDomains/3.
+:- export get_room_domain/5.
+:- export calculate_makespan/2.
+:- export get_professor_domains/3.
 
-:- export getVarsFromTasks/2.
-:- export createDecisionVars/5.
+:- export get_vars_from_tasks/2.
+:- export create_decision_vars/5.
 
-%%% calculateMakespan/2
-%%% calculateMakespan(Tasks, Makespan)
+%%% calculate_makespan/2
+%%% calculate_makespan(Tasks, Makespan)
 %%% Calculates the makespan for the schedule/5 predicate.
 
 % TODO 2022-Jun-24: Placeholder makespan calculator
-calculateMakespan(_, 0). 
+calculate_makespan(_, 0). 
 
 
 
-%%% getVarsFromTasks/2
-%%% getVarsFromTasks(Tasks, TaskVars).
-getVarsFromTasks([], []).
+%%% get_vars_from_tasks/2
+%%% get_vars_from_tasks(Tasks, TaskVars).
+get_vars_from_tasks([], []).
 
-getVarsFromTasks([task(_, Where, When) | Tasks], [Where, When | Rest]) :-
-  getVarsFromTasks(T, Rest).
+get_vars_from_tasks([task(_, Where, When) | Tasks], [Where, When | Rest]) :-
+  get_vars_from_tasks(T, Rest).
 
 
 
-%%% intersectLists/2
-%%% intersectLists(Lists, Intersected).
+%%% intersect_lists/2
+%%% intersect_lists(Lists, Intersected).
 %%% A predicate that applies the intersection/3 predicate to a list
 %%% containing other lists and returns the result. 
 
 %%% List is empty
-intersectLists([], []).
+intersect_lists([], []).
 
 %%% Only one list remains
-intersectLists([List], List).
+intersect_lists([List], List).
 
 %%% For >= 2 lists, intersect the first 2 lists and put the result back in
 %%% the starting list (reduce style).
-intersectLists([List1, List2 | Rest], Intersected) :-
+intersect_lists([List1, List2 | Rest], Intersected) :-
   % intersect the 2 lists
   intersection(List1, List2, Temp),
 
   % Add the temporary result to the list and continue (reduce style)
-  intersectLists([Temp | Rest], Intersected).
+  intersect_lists([Temp | Rest], Intersected).
 
 
 
@@ -73,11 +73,11 @@ sanity_check(X):-
 
 
 
-%%% calculateGroupMembers/3
-%%% calculateGroupMembers(GroupIds, AllGroups, Total).
+%%% calculate_group_members/3
+%%% calculate_group_members(GroupIds, AllGroups, Total).
 %%% A predicate that calculates the total number of members in
 %%% the groups who's groupIds are in the GroupIds list.
-calculateGroupMembers(GroupIds, AllGroups, Total) :-
+calculate_group_members(GroupIds, AllGroups, Total) :-
   % Find the Count for every groups
   findall(Count, (
     member(GId, GroupIds),
@@ -91,27 +91,27 @@ calculateGroupMembers(GroupIds, AllGroups, Total) :-
 
 % lecture(Id, Duration, Semester, Professors, Groups).
 
-%%% getProfessorDomains/3
-%%% getProfessorDomains(Lecture, AllProfessors, Domain).
+%%% get_professor_domains/3
+%%% get_professor_domains(Lecture, AllProfessors, Domain).
 %%% A predicate that given a lecture, returns the availability  
 %%% intersection of all professors that teach the specified lecture.
-getProfessorDomains(lecture(Id, _Dur, _Sem, _Type, Profs, _Grp), AllProfs, Domain) :-
+get_professor_domains(lecture(Id, _Dur, _Sem, _Type, Profs, _Grp), AllProfs, Domain) :-
   % Find availability domain for all professors in the lecture
   findall(Time, (member(Id, Profs), member(professor(Id, Time), AllProfs)), ProfTimes),
   
   % Intersect the domains the return the Final Domain
-  intersectLists(ProfTimes, Domain).
+  intersect_lists(ProfTimes, Domain).
 
 
 
-%%% getRoomDomain/5
-%%% getRoomDomain(Lecture, AllRooms, AllGroups, SelectedRoom, SelectedDomain).
+%%% get_room_domain/5
+%%% get_room_domain(Lecture, AllRooms, AllGroups, SelectedRoom, SelectedDomain).
 %%% A predicate that given a lecture, returns the id and the availability
 %%% of a room that has the capacity to seat every student in the lecture and 
 %%% the id of that specific room.
-getRoomDomain(lecture(Id, _Dur, _Sem, Type, _Profs, Groups), AllRooms, AllGroups, SelectedRoom, SelectedDomain) :-
+get_room_domain(lecture(Id, _Dur, _Sem, Type, _Profs, Groups), AllRooms, AllGroups, SelectedRoom, SelectedDomain) :-
   % Calculate total member count for groups in the lecture
-  calculateGroupMembers(Groups, AllGroups, TotalMembers),
+  calculate_group_members(Groups, AllGroups, TotalMembers),
 
   % Find all rooms that fulfill the requirements 
   FilteredRooms = [], fail, % TODO 2022-Jun-24: 
@@ -121,12 +121,12 @@ getRoomDomain(lecture(Id, _Dur, _Sem, Type, _Profs, Groups), AllRooms, AllGroups
 
 
 
-%%% createDecisionVars/5
-%%% createDecisionVars(Lecture, ProfDomains, RoomId, RoomDomain, Task).
+%%% create_decision_vars/5
+%%% create_decision_vars(Lecture, ProfDomains, RoomId, RoomDomain, Task).
 %%% A predicate that for a given lecture, creates the StartTime decision variable
 %%% from the supplied domain forthe professors and the room and applies the necessary
 %%% constraints to it.
-createDecisionVars(lecture(Id, Dur, _S, _T, _P, _G), ProfDomains, RoomId, RoomDomain, task(LecId, RoomId, StartTime)) :-
+create_decision_vars(lecture(Id, Dur, _S, _T, _P, _G), ProfDomains, RoomId, RoomDomain, task(LecId, RoomId, StartTime)) :-
   % Intersect the two domains
   intersection(ProfDomains, RoomDomain, LectureDomain),
 
