@@ -1,212 +1,98 @@
 % Library imports
-:- use_module("./custom_mod").
+:- use_module("./scheduler_utilities").
 
 :- lib(ic).
 :- lib(ic_global).
 :- lib(branch_and_bound).
 
-% === Data structure ===
+% === DATA MODELS ===
 
-% lecture(id, semester, duration, groups, professors, roomType).
-% professors(id, availablility).
-% room(id, type, availablility).
-% group(id, count, overlaps).
-% task(lectureId, roomId, startTime).
-
-% daySettings(dayHours, Days)
-daySettings(14, 5).
+% professor(Id, Availability).
+% group(Id, MemberCount, Availability).
+% room(Id, Type, Capacity, Availability).
+% lecture(Id, Duration, Semester, Type, Professors, Groups).
 
 % === DUMMY DATA ===
 
-% lecture(id, semester, duration, groups, professors, roomType).
-lecture(1, 1, 2, ["g1", "g2", "g3"], ["p1", "p2"], "Aud").
-lecture(2, 1, 1, ["g2"], ["p1"], "Lab").
-lecture(3, 2, 1, ["g3"], ["p3"], "Aud").
+% lecture(Id, Duration, Semester, Professors, Groups).
+lecture(1, 1, 2, "Aud", ["p1", "p2"], ["g1", "g2", "g3"]).
+lecture(2, 1, 1, "Lab", ["p1"], ["g2"]).
+lecture(3, 2, 1, "Aud", ["p3"], ["g3"]).
 
-% professor(id, availablility).
+% professor(Id, Availability).
 professor("p1", []).
 professor("p2", []).
 professor("p3", []).
 
-% room(id, type, availablility).
+% room(Id, Type, Capacity, Availability).
 room("r1", "Lab", 50, []).
 room("r2", "Lab", 50, []).
 room("r3", "Aud", 100, []).
 room("r4", "Aud", 150, []).
 
-% group(id, count, overlaps).
+% group(Id, MemberCount, Availability).
 group("g1", 50, ["g2", "g3"]).
 group("g2", 25, ["g1"]).
 group("g3", 50, ["g1"]).
 
-% =============================================================
 
-makeProfessorDomains(Professors, ProfessorDomains) :-
-  findall(professor(Id, Availability), professor(Id, Availability), Professors),
-  createProfessorDomains(Professors, ProfessorDomains).
+applyLectureConstraints([], _Professors, _Groups, _Rooms, []).
 
-createProfessorDomains([], []).
+applyLectureConstraints([CurrLec | Lectures], Professors, Groups, Rooms, [CurrTask | Tasks]) :-
+  % Get the lecture's professors intersected domain
+  getProfessorDomains(CurrLec, Professors, ProfessorDomains),
 
-createProfessorDomains([professor(Id, Availability) | RestProfs], [(Id, CurrDom) | RestDoms]) :-
-  CurrDom #:: Availability,
-  createProfessorDomains(RestProfs, RestDoms).
+  % Get room's with correct type and enough capacity
+  getRoomDomain(CurrLec, Rooms, Groups, RoomId, RoomDomain),
 
-% =============================================================
+  % Create the lectures decision variables and create the task
+  createDecisionVars(CurrLec, ProfessorDomains, RoomId, RoomDomain, CurrTask),
 
-makeRoomDomains(Rooms, RoomDomains) :-
-  findall(room(Id, Type, Capacity, Availability), room(Id, Type, Capacity, Availability), Rooms),
-  createRoomDomains(Rooms, RoomDomains).
-
-createRoomDomains([], []).
-
-createRoomDomains([room(Id, _, _, Availability) | RestRooms], [(Id, CurrDom) | RestDoms]) :-
-  CurrDom #:: Availability,
-  createRoomDomains(RestRooms, RestDoms).
-
-% =============================================================
-
-makeGroupDomains(Groups, GroupDomains) :-
-  findall(group(Id, Count, Overlaps), group(Id, Count, Overlaps), Groups),
-
-  % Calculate total week duration
-  daySettings(DayLength, WeekDays),
-  TotalDuration is DayLength * WeekDays - 1, % Starting from 0
-
-  createGroupDomains(Groups, GroupDomains, TotalDuration).
-
-createGroupDomains([], [], _).
-
-createGroupDomains([group(Id, _, _) | RestGroups], [(Id, CurrDom) | RestDoms], TotalDuration) :-
-  CurrDom #:: 0..TotalDuration,
-  createGroupDomains(RestGroups, RestDoms).
-
-% =============================================================
-
-intersectDomains([], _). % TODO: Replace _
-
-intersectDomains([CurrDom | Domains], Intersected) :-
-  % TODO: Intersect domains
-  fail,
-  intersectDomains(Domains, Intersected).
+  % Continue the next lecture
+  applyLectureConstraints(Lectures, Professors, Groups, Rooms, Tasks).
 
 
-% findDomainFromId/3
-% findDomainFromId(Id, Domains, Result).
-findDomainFromId(_, [], _) :- fail.
 
-findDomainFromId(Id, [(Id, Domain) | _], Domain).
+%%% schedule/1.
+%%% schedule/5.
+%%% The schedule predicate. This predicate usese CLP with the branch 
+%%% and bound algorithm to create a timetable for the given lectures.
 
-findDomainFromId(Id, [(AnId, _) | Domains], Domain) :-
-  AnId \= Id,
-  findDomainFromId(Id, Domains, Domain).
-
-
-% intersectResourceDomains/3
-% intersectResourceDomains(Ids, Domains, Intersected).
-intersectResourceDomains(Ids, Domains, Intersected) :-
-  fail.
-
-
-% findRoomsOfType/3
-% findRoomsOfType(Rooms, Type, FoundRoomIds).
-findRoomsOfType([], _, []).
-
-findRoomsOfType([room(Id, Type, _, _) | Rooms], Type, [Id | RoomIds]) :-
-  findRoomsOfType(Rooms, Type, RoomIds).
-
-findRoomsOfType([room(Id, RType, _, _) | Rooms], Type, RoomIds) :-
-  RType \= Type,
-  findRoomsOfType(Rooms, Type, RoomIds).
-
-
-% applyLectureConstraints(
-%  Lectures, Tasks,
-%  ProfDomains, RoomDomains, GroupDomains,
-%  Professors,  Rooms,       Groups
-% ).
-
-applyLectureConstraints([], [], _, _, _, _, _, _).
-
-applyLectureConstraints(
-  [lecture(Id, Semester, Duration, GroupIds, ProfessorIds, RoomType) | Lectures],
-  [task(Id, RoomId, StartTime) | Tasks],
-  ProfDomains, RoomDomains, GroupDomains, Professors, Rooms, Groups
-) :-
-  % Get professor domains and get their intersection
-  intersectResourceDomains(ProfessorIds, ProfDomains, IntersectedProfessors),
-
-  % Get group domains and get their intersection
-  intersectResourceDomains(GroupIds, GroupDomains, IntersectedGroups),
-
-  % Intersect the two domains from before
-  intersectDomains([IntersectedProfessors, IntersectedGroups], ProfessorGroupDomain),
-
-  % Get all rooms of the correct type and their domain
-  findRoomsOfType(Rooms, RoomType, RelevantRoomIds),
-
-  % Make reified constraint for room
-  % TODO: RoomId find
-  fail,
-
-  % Constraint: the room must be available at the same time as the other domain ???
-  % intersectDomains([ProfessorGroupDomain, RoomDomain], LastDomain),
-  % - RoomDomain is given by the reified constraint
-  fail,
-
-  % Calculate lecture start and end time
-  EndTime #= StartTime + Duration,
-
-  % Check that the range [StartTime .. EndTime] is in both domains (LastDomain ???)
-  % indomain(???)???
-  % ::(Var, Domain, Bool) ??? Reified περιορισμοί πεδίων
-  fail,
-
-  % Lecture ends in same day
-  fail,
-  % StartTime mod 14 #< EndTime mod 14, % 14: dayLength
-
-  applyLectureConstraints(Lectures, Tasks, ProfDomains, RoomDomains, GroupDomains, Professors, Rooms, Groups).
-
-% applyGroupConstraints(Groups, GroupDomains).
-applyGroupConstraints([], []).
-
-applyGroupConstraints([Group | Groups], [Domain | Domains]) :-
-  % For every group, make all groups with overlaps
-  % not available at the same time
-  fail,
-
-  applyGroupConstraints(Groups, Domains).
-
-% task(lectureId, roomId, startTime).
-getDecisionVars([], []).
-
-getDecisionVars([task(_, RoomId, StartTime) | Tasks], [RoomId, StartTime|Vars]) :-
-  getDecisionVars(Tasks, Vars).
-
-% =============================================================
-
+%%% schedule/1.
+%%% schedule(Tasks).
+%%% In this version, the necessary data are fetched from prolog facts and then the
+%%% the schedule/5 predicate is called.
 schedule(Tasks) :-
-  % Create domains for resources
-  makeProfessorDomains(Professors, ProfDomains),
-  makeRoomDomains(Rooms, RoomDomains),
-  makeGroupDomains(Groups, GroupDomains),
+  % Fetch data from prolog facts.
+  % TODO 2022-Jun-24: Fetch data (findall???)
+  Rooms = [], Groups = [], Lectures = [], Professors = [],
+  fail,
 
-  % fetch lectures
-  findall(lecture(Id, Semester, Duration, Groups, Professors, RoomType),
-   lecture(Id, Semester, Duration, Groups, Professors, RoomType), Lectures),
+  % Call the other schedule predicate
+  schedule(Lectures, Professors, Groups, Rooms, Tasks).
 
+
+
+%%% schedule/5.
+%%% schedule(Lectures, Professors, Groups, Rooms, Tasks).
+%%% This version is the main schedule/? predicate.
+schedule(Lectures, Professors, Groups, Rooms, Tasks) :-
   % Apply constraints for every lecture
-  applyLectureConstraints(Lectures, Tasks,
-   ProfDomains, RoomDomains, GroupDomains,
-   Professors,  Rooms,       Groups
-  ),
+  applyLectureConstraints(Lectures, Professors, Groups, Rooms, Tasks),
 
-  % Apply constraint for all groups containing same members
+  % Constraints for professors
+  % TODO 2022-Jun-24: Every lecture a professor teaches must not occur at the same time
   fail,
 
-  % Makespan
+  % Constraints for groups
+  % TODO 2022-Jun-24: Every lecture a group has must not occur at the same time
   fail,
 
-  % Run branch and bound
-  getDecisionVars(Tasks, DesicionVars),
-  bb_min(labeling(DesicionVars), 0, _).
+  % Constraints for rooms
+  % TODO 2022-Jun-24: Every room must have only one lecture at the same time
+  fail,
+
+  % Calculate makespan from tasks and call bb_min
+  calculateMakespan(Tasks, Goal),
+  getVarsFromTasks(Tasks, TaskVars), % Get the variables from the tasks
+  bb_min(labeling(TaskVars), Goal, _). % Test other bb strategies
