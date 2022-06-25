@@ -26,7 +26,7 @@ calculate_makespan(_, 0).
 get_vars_from_tasks([], []).
 
 get_vars_from_tasks([task(_, Where, When) | Tasks], [Where, When | Rest]) :-
-  get_vars_from_tasks(T, Rest).
+  get_vars_from_tasks(Tasks, Rest).
 
 
 
