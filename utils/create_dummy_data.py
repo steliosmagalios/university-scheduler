@@ -60,7 +60,7 @@ def main():
         fact = predicate_name + "("
         for variable in variables:
             fact += json.dumps(create_data(variable)) + ","
-        fact = fact[:-1] + ")"
+        fact = fact[:-1] + ")."
         
         # Add the fact to the list
         facts.append(fact)
