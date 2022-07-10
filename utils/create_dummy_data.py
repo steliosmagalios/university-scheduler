@@ -1,16 +1,15 @@
 import uuid
 import random
 import json
+from sys import argv
 
 """
 A python script to generate dummy data for the project.
 """
 
-MIN_LIST_ITEMS = 20
-
-predicate_name = "room"
-variables = [
-    # id
+room_pred_name = "room"
+room_variables = [
+        # id
     {
         "vartype": "string",
     },
@@ -33,6 +32,55 @@ variables = [
     }
 ]
 
+# ==============================================================================
+
+professor_pred_name = "professor"
+professor_variables = [
+
+    # id
+    {
+        "vartype": "string",
+    },
+    # availability
+    {
+        "vartype": "list",
+        "min_value": 0,
+        "max_value": 69,
+    }
+]
+
+# ==============================================================================
+
+group_pred_name = "group"
+group_variables = [
+    # id
+    {
+        "vartype": "string",
+    },
+    # memberCount
+    {
+        "vartype": "integer",
+        "max": 150,
+        "min": 25
+    },
+    # overlapping
+    {
+        "vartype": "empty_list",
+
+    }
+]
+
+# ==============================================================================
+
+facts_dict = {
+    "room": room_variables,
+    "professor": professor_variables,
+    "group": group_variables
+}
+
+
+MIN_LIST_ITEMS = 20
+
 def create_data(datum):
     if datum["vartype"] == 'string':
         return str(uuid.uuid4())
@@ -47,15 +95,15 @@ def create_data(datum):
         )
         timeslots.sort()
         return timeslots
+    elif datum["vartype"] == 'empty_list':
+        return []
     else:
         return 0;
 
-DATA_COUNT = 10
-
-def main():
+def main(predicate_name, variables, facts_count):
 
     facts = []
-    for _ in range(DATA_COUNT):
+    for _ in range(facts_count):
         # Create a new data object
         fact = predicate_name + "("
         for variable in variables:
@@ -72,4 +120,15 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    if len(argv) != 3:
+        print("Usage: create_dummy_data.py <predicate_name> <facts_count>")
+        exit(1)
+    
+    if argv[1] not in facts_dict:
+        print("Predicate not found")
+        exit(1)
+    
+    predicate_name = argv[1]
+    variables = facts_dict[predicate_name]
+    facts_count = int(argv[2])
+    main(predicate_name, variables, facts_count)
