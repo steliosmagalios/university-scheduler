@@ -30,6 +30,8 @@ schedule(Lectures, Professors, Groups, Rooms, Tasks) :-
 
   % apply constraints
   lecture_constraints(Lectures, Tasks, Professors, Groups, Rooms),
+
+  professor_constraints(Professors, Lectures, Tasks),
   
   true.
 

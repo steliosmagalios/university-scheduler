@@ -8,7 +8,7 @@
 
 % Exports
 :- export lecture_constraints/5.
-
+:- export professor_constraints/3.
 
 
 
@@ -52,6 +52,27 @@ lecture_constraints(
 
 
 
+%%% professor_constraints/3
+%%% professor_constraints(+Professors, +Lectures, +Tasks)
+professor_constraints([], _Lectures, _Tasks).
+
+professor_constraints([professor(PId, _Times) | Professors], Lectures, Tasks) :-
+  % Find all lectures the professor teaches and fetch the Duration and When variables
+  findall((When, Dur), (
+    member(lecture(Id, Dur, _Type, Profs, _Groups), Lectures),
+    member(PId, Profs),
+    member(task(Id, _, When), Tasks)
+  ), Vars),
+
+  % Split variables to two lists
+  split_list(Vars, WhenList, DurationsList),
+
+  % Apply disjunctive to When because a professor
+  % can only teach one lecture at a time
+  disjunctive(WhenList, DurationsList),
+
+  % Continue with the rest of the professors
+  professor_constraints(Professors, Lectures, Tasks).
 
 
 
@@ -60,6 +81,17 @@ lecture_constraints(
 
 
 
+
+
+
+%%% split_list/3
+%%% split_list(+List, -First, -Second).
+%%% This predicate accepts a list where all 
+%%% elements are pairs and splits it into two lists.
+split_list([], [], []).
+
+split_list([(Var1, Var2) | Rest], [Var1 | RestList1], [Var2 | RestList2]) :-
+  split_list(Rest, RestList1, RestList2).
 
 
 
@@ -86,7 +118,7 @@ sum_of_groups_sizes([Id | Groups], AllGroups, TotalSize) :-
 %%% list. The result is a list of time slots.
 
 % The list of Ids is empty
-professors_intersected_availability([], AllProfessors, []).
+professors_intersected_availability([], _AllProfessors, []).
 
 % One professor remains
 professors_intersected_availability([Id], AllProfessors, Times) :-
