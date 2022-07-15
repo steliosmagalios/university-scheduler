@@ -35,6 +35,8 @@ schedule(Lectures, Professors, Groups, Rooms, Tasks) :-
   
   group_constraints(Groups, Lectures, Tasks),
 
+  room_constraints(Rooms, Lectures, Tasks),
+
   true.
 
   % solve problem

@@ -10,6 +10,7 @@
 :- export lecture_constraints/5.
 :- export professor_constraints/3.
 :- export group_constraints/3.
+:- export room_constraints/3.
 
 
 
@@ -87,6 +88,24 @@ group_constraints([group(Id, _, Overlapping) | Groups], Lectures, Tasks) :-
 
   % Continue with the rest of the groups
   group_constraints(Groups, Lectures, Tasks).
+
+
+
+
+
+%%% room_constraits/3
+%%% room_constraints(+Rooms, +Lectures, +Tasks)
+room_constraints([], _Lectures, _Tasks).
+
+room_constraints([room(Id, _Type, _Cap, _Times) | RestRooms], _Lectures, _Tasks) :-
+  % Get all lectures that are hosted in the room from the tasks list
+  fail,
+
+  % Apply disjunctive to those variables
+  fail,
+
+  % Continue with the rest of the rooms
+  room_constraints(RestRooms, _Lectures, _Tasks).
 
 
 
