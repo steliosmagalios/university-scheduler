@@ -9,7 +9,7 @@
 % Exports
 :- export lecture_constraints/5.
 :- export professor_constraints/3.
-
+:- export group_constraints/3.
 
 
 
@@ -64,12 +64,8 @@ professor_constraints([professor(PId, _Times) | Professors], Lectures, Tasks) :-
     member(task(Id, _, When), Tasks)
   ), Vars),
 
-  % Split variables to two lists
-  split_list(Vars, WhenList, DurationsList),
-
-  % Apply disjunctive to When because a professor
-  % can only teach one lecture at a time
-  disjunctive(WhenList, DurationsList),
+  % Apply disjunctive constraint to the variables
+  apply_disjunctive(Vars),
 
   % Continue with the rest of the professors
   professor_constraints(Professors, Lectures, Tasks).
@@ -78,9 +74,54 @@ professor_constraints([professor(PId, _Times) | Professors], Lectures, Tasks) :-
 
 
 
+%%% group_constraints/3
+%%% group_constraints(+Groups, +Lectures, +Tasks)
+group_constraints([], _Lectures, _Tasks).
+
+group_constraints([group(Id, _, Overlapping) | Groups], Lectures, Tasks) :-
+  % Find all lectures the group takes part in and fetch the Duration and When variables
+  group_constraints_aux([Id | Overlapping], Lectures, Tasks, Vars),
+
+  % Apply disjunctive constraint to the variables
+  apply_disjunctive(Vars),
+
+  % Continue with the rest of the groups
+  group_constraints(Groups, Lectures, Tasks).
 
 
 
+
+
+%%% group_constraints_aux/4
+%%% group_constraints_aux(+GroupIds, +Lectures, +Tasks, -Vars)
+%%% This auxiliary predicate is used to find all lectures the group
+%%% takes part in and fetch the Duration and When variables
+group_constraints_aux([], _Lectures, _Tasks, []).
+
+group_constraints_aux([Id | RestIds], Lectures, Tasks, Result) :-
+  % Find all lectures the group participates and fetch the Duration and When variables
+  findall((When, Dur), (
+    member(lecture(Id, Dur, _Type, _Professors, Groups), Lectures),
+    member(Id, Groups),
+    member(task(Id, _, When), Tasks)
+  ), Vars),
+
+  % Continue with the rest of the groups
+  group_constraints_aux(RestIds, Lectures, Tasks, RestVars),
+  append(RestVars, Vars, Result).
+
+
+
+
+
+/*
+
+  Room constraints:
+    - for all lectures hosted in room X 
+      ? can you do that with constraints? (maybe reified?)
+      ? is alternative taking care of that?
+
+*/
 
 
 
@@ -92,6 +133,24 @@ split_list([], [], []).
 
 split_list([(Var1, Var2) | Rest], [Var1 | RestList1], [Var2 | RestList2]) :-
   split_list(Rest, RestList1, RestList2).
+
+
+
+
+
+%%% apply_disjunctive/1
+%%% apply_disjunctive(+Vars)
+
+%%% The list is empty
+apply_disjunctive([]).
+
+%%% The list is not empty
+apply_disjunctive(Vars) :-
+  % Split variables to two lists
+  split_list(Vars, WhenList, DurationsList),
+
+  % Apply the disjunctive constraint
+  disjunctive(WhenList, DurationsList).
 
 
 
