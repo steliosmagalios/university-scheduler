@@ -40,7 +40,7 @@ schedule(Lectures, Professors, Groups, Rooms, Tasks) :-
   % true.
 
   % solve problem
-  calculate_goal(Tasks, Goal),
+  calculate_optimization_value(Tasks, Goal),
   get_vars_from_tasks(Tasks, Vars),
   bb_min(labeling(Vars), Goal, _).
 
@@ -48,10 +48,10 @@ schedule(Lectures, Professors, Groups, Rooms, Tasks) :-
 
 
 
-%%% calculate_goal/2
-%%% calculate_goal(+Tasks, -Goal).
+%%% calculate_optimization_value/2
+%%% calculate_optimization_value(+Tasks, -Goal).
 %%% This predicate acts as the "objective function" of the problem.
-calculate_goal(_Tasks, 0).
+calculate_optimization_value(_Tasks, 0).
 
 
 
