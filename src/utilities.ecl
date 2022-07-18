@@ -50,6 +50,15 @@ correct_type_and_capacity(room(_Id, Type, RoomCapacity, _Times), Type, MinCapaci
 
 
 
+%%% correct_room/2
+%%% correct_room(+At, +RoomType).
+%%% This predicate is used to filter the list of rooms based on the id.
+correct_room(at(Id, _, _), Id).
+
+
+
+
+
 %%% parse_info_room/2
 %%% parse_info_room(+Rooms, -InfoRooms).
 %%% This predicate parses the information of the rooms to the infoRoom format used by alternative.

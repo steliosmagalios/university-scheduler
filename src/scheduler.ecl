@@ -29,20 +29,20 @@ schedule(Lectures, Professors, Groups, Rooms, Tasks) :-
   % parse_info_room(Rooms, InfoRooms),
 
   % apply constraints
-  lecture_constraints(Lectures, Tasks, Professors, Groups, Rooms),
+  lecture_constraints(Lectures, Tasks, RoomAts, Professors, Groups, Rooms),
 
   professor_constraints(Professors, Lectures, Tasks),
   
   group_constraints(Groups, Lectures, Tasks),
 
-  room_constraints(Rooms, Lectures, Tasks),
+  room_constraints(Rooms, RoomAts, Lectures, Tasks),
 
-  true.
+  % true.
 
   % solve problem
-  % calculate_goal(Tasks, Goal),
-  % get_vars_from_tasks(Tasks, Vars),
-  % bb_min(labeling(Vars), Goal, _).
+  calculate_goal(Tasks, Goal),
+  get_vars_from_tasks(Tasks, Vars),
+  bb_min(labeling(Vars), Goal, _).
 
 
 

@@ -7,10 +7,10 @@
 :- lib(ic_edge_finder).
 
 % Exports
-:- export lecture_constraints/5.
+:- export lecture_constraints/6.
 :- export professor_constraints/3.
 :- export group_constraints/3.
-:- export room_constraints/3.
+:- export room_constraints/4.
 
 
 
@@ -18,11 +18,12 @@
 
 %%% lecture_constraints/5
 %%% lecture_constraints(+Lectures, -Tasks, +AllProfessors, +AllGroups, +AllRooms)
-lecture_constraints([], [], _AllProfessors, _AllGroups, _AllRooms).
+lecture_constraints([], [], [], _AllProfessors, _AllGroups, _AllRooms).
 
 lecture_constraints(
   [lecture(Id, Duration, Type, Professors, Groups) | Lectures], 
   [task(Id, Where, When) | Tasks], 
+  RoomsAtList,
   AllProfessors, AllGroups, AllRooms
 ) :-
   % Get the lectures's professors intersected availability schedule
@@ -44,10 +45,11 @@ lecture_constraints(
 
   % Get the Where variable through the alternative constraint
   filter(AllRooms, correct_type_and_capacity, [Type, GroupsSize], FilteredRoomInfo),
-  alternative(When, Duration, Where, FilteredRoomInfo, _RoomsAt),
+  alternative(When, Duration, Where, FilteredRoomInfo, RoomsAt),
 
   % Continue with the rest of the lectures
-  lecture_constraints(Lectures, Tasks, AllProfessors, AllGroups, AllRooms).
+  lecture_constraints(Lectures, Tasks, RestRoomsAt, AllProfessors, AllGroups, AllRooms),
+  append(RoomsAt, RestRoomsAt, RoomsAtList).
 
 
 
@@ -95,18 +97,18 @@ group_constraints([group(Id, _, Overlapping) | Groups], Lectures, Tasks) :-
 
 %%% room_constraits/3
 %%% room_constraints(+Rooms, +Lectures, +Tasks)
-room_constraints([], _Lectures, _Tasks).
+room_constraints([], _RoomAts, _Lectures, _Tasks).
 
-room_constraints([room(Id, _Type, _Cap, _Times) | RestRooms], _Lectures, _Tasks) :-
+room_constraints([room(Id, _Type, _Cap, _Times) | RestRooms], RoomAts, _Lectures, _Tasks) :-
   % Get all lectures that are hosted in the room from the tasks list
-  fail,
+  filter(RoomAts, correct_room, [Id], FilteredRoomAts),
+  unpack_room_at(FilteredRoomAts, WhenList, DurationList),
 
   % Apply disjunctive to those variables
-  fail,
+  disjunctive(WhenList, DurationList),
 
   % Continue with the rest of the rooms
-  room_constraints(RestRooms, _Lectures, _Tasks).
-
+  room_constraints(RestRooms, RoomAts, _Lectures, _Tasks).
 
 
 
@@ -157,6 +159,19 @@ split_list([(Var1, Var2) | Rest], [Var1 | RestList1], [Var2 | RestList2]) :-
 
 
 
+%%% unpack_room_at/3
+%%% unpack_room_at(+List, -First, -Second).
+%%% This predicate works similar to split_list/3, but it unpacks the
+%%% list of pairs into two lists.
+unpack_room_at([], [], []).
+
+unpack_room_at([at(_Id, When, Duration) | RestRoomAts], [When | RestWhen], [Duration | RestDuration]) :-
+  unpack_room_at(RestRoomAts, RestWhen, RestDuration).
+
+
+
+
+
 %%% apply_disjunctive/1
 %%% apply_disjunctive(+Vars)
 
@@ -165,6 +180,8 @@ apply_disjunctive([]).
 
 %%% The list is not empty
 apply_disjunctive(Vars) :-
+  Vars \= [],
+
   % Split variables to two lists
   split_list(Vars, WhenList, DurationsList),
 
