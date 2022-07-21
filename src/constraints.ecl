@@ -71,7 +71,7 @@ professor_constraints([professor(Id, _Times) | RestProfessors], Lectures, Tasks)
   ), VarList),
 
   split_list(VarList, WhenList, DurationList), !,
-  disjunctive(WhenList, DurationList),
+  apply_disjunctive(WhenList, DurationList),
 
   professor_constraints(RestProfessors, Lectures, Tasks).
 
@@ -87,7 +87,7 @@ group_constraints([group(Id, _Members, Overlapping) | RestGroups], Lectures, Tas
   % Get the When and Duration of all lectures that have this group or any other overlapping
   get_vars_of_groups([Id | Overlapping], Lectures, Tasks, WhenList, DurationList), !,
 
-  disjunctive(WhenList, DurationList),
+  apply_disjunctive(WhenList, DurationList),
 
   group_constraints(RestGroups, Lectures, Tasks).
 
@@ -102,11 +102,17 @@ room_constraints([], _RoomAts).
 room_constraints([room(Id, _Type, _Capacity, _Times) | RestRooms], RoomAts) :-
   findall((Start, Dur), member(at(Id, Start, Dur), RoomAts), VarList),
   split_list(VarList, StartList, DurList), !,
-  disjunctive(StartList, DurList),
+  apply_disjunctive(StartList, DurList),
 
   room_constraints(RestRooms, RoomAts).
 
 
+
+apply_disjunctive([], []).
+
+apply_disjunctive(WhenList, DurationList) :-
+  WhenList \= [], DurationList \= [],
+  disjunctive(WhenList, DurationList).
 
 
 
