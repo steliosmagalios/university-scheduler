@@ -1,5 +1,6 @@
 :- use_module("./utilities").
 :- use_module("./constraints").
+:- use_module('./map_filter_reduce').
 
 :- lib(ic).
 :- lib(ic_global).
@@ -25,19 +26,11 @@ test_schedule(Tasks) :-
 
 %%% schedule/5
 schedule(Lectures, Professors, Groups, Rooms, Tasks) :-
-  % parse data
-  % parse_info_room(Rooms, InfoRooms),
-
   % apply constraints
   lecture_constraints(Lectures, Tasks, RoomAts, Professors, Groups, Rooms),
-
   professor_constraints(Professors, Lectures, Tasks),
-  
   group_constraints(Groups, Lectures, Tasks),
-
-  room_constraints(Rooms, RoomAts, Lectures, Tasks),
-
-  % true.
+  room_constraints(Rooms, RoomAts),
 
   % solve problem
   calculate_optimization_value(Tasks, Goal),
@@ -51,9 +44,10 @@ schedule(Lectures, Professors, Groups, Rooms, Tasks) :-
 %%% calculate_optimization_value/2
 %%% calculate_optimization_value(+Tasks, -Goal).
 %%% This predicate acts as the "objective function" of the problem.
-calculate_optimization_value(_Tasks, 0).
-
-
+calculate_optimization_value(Tasks, Goal) :-
+  % FIXME: Makespan here is for placeholder purposes.
+  map(Tasks, get_when, [], Whens),
+  ic_global:maxlist(Whens, Goal).
 
 
 
