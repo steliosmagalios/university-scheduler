@@ -29,13 +29,16 @@ schedule(Lectures, Professors, Groups, Rooms, Tasks) :-
   % apply constraints
   lecture_constraints(Lectures, Tasks, RoomAts, Professors, Groups, Rooms),
   professor_constraints(Professors, Lectures, Tasks),
-  group_constraints(Groups, Lectures, Tasks),
+  % group_constraints(Groups, Lectures, Tasks), % FIXME: Group constraints are not working
   room_constraints(Rooms, RoomAts),
+
+  % get_vars_from_tasks(Tasks, Vars),
+  % labeling(Vars).
 
   % solve problem
   calculate_optimization_value(Tasks, Goal),
   get_vars_from_tasks(Tasks, Vars),
-  bb_min(labeling(Vars), Goal, _).
+  bb_min(labeling(Vars), Goal, bb_options{ strategy: dichotomic, timeout: 30 }).
 
 
 

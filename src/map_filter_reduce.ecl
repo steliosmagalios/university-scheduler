@@ -55,26 +55,30 @@ reduce([Item1, Item2 | RestItems], Predicate, Arguments, Result) :-
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-correct_id(Item, IdList) :-
-  Item =.. [_PredName, Id | _Rest],
-  member(Id, IdList).
+id_in_list(Item, List) :-
+  Item =.. [_Pred, Id | _Rest],
+  member(Id, List).
 
+map_domain(professor(_Id, Domain), Domain).
 
+get_professor_domain(D1, D2, Intersected) :-
+  intersection(D1, D2, Intersected).
 
-correct_type_and_capacity(room(_Id, Type, Capacity, _Times), Type, MinCapacity) :-
+map_number_of_students(group(_Id, Students, _Overlapping), Students).
+
+is_room_eligible(room(_Id, Type, Capacity, _Availability), Type, MinCapacity) :-
   Capacity >= MinCapacity.
 
+map_lecture_to_vars(lecture(Id, Duration, _Type, _Profs, _Groups), (When, Duration), TaskList) :-
+  member(task(Id, _Where, When), TaskList), !.
 
+is_professor_in_lecture(lecture(_Id, _Duration, _Type, Profs, _Groups), ProfId) :-
+  member(ProfId, Profs).
+
+get_id(Item, Id) :-
+  Item =.. [_Pred, Id | _Rest].
+
+is_group_in_lecture(lecture(_Id, _Duration, _Type, _Profs, Groups), GroupId) :-
+  member(GroupId, Groups).
 
 get_when(task(_Id, _Where, When), When).
-
-
-
-extract_professor_time(professor(Id, Times), Times).
-
-
-intersect_domains(Domain1, Domain2, Domain) :-
-  intersection(Domain1, Domain2, Domain).
-
-
-extract_group_size(group(Id, Size, _Overlapping), Size).
