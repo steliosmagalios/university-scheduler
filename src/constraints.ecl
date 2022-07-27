@@ -84,7 +84,7 @@ group_constraints([], _Lectures, _Tasks).
 group_constraints([group(Id, _Members, Overlapping) | Groups], Lectures, Tasks) :-
   group_constraints(Groups, Lectures, Tasks),
 
-  % Get all lectures that this group and 
+  % Get all lectures that this group and
   % all the overlapping ones are in.
   get_lectures_of_groups([Id | Overlapping], Lectures, FilteredLectures),
   % filter(Lectures, is_group_in_lecture, [[Id | Overlapping]], FilteredLectures),
@@ -172,13 +172,13 @@ get_total_number_of_students(LecGroups, Groups, TotalStudents) :-
 remove_duplicates([], []).
 
 remove_duplicates([Head | RestTasks], [Head | RestResult]) :-
-  Head = task(_Id, _Where, _When),
+  %Head = task(_Id, _Where, _When),
   not(member(Head, RestTasks)), !,
 
   remove_duplicates(RestTasks, RestResult).
 
-remove_duplicates([Head | RestTasks], RestResult) :-
-  Head = task(Id, _Where, _When),
-  member(task(Id, _, _), RestTasks), !,
-  
+remove_duplicates([_Head | RestTasks], RestResult) :-
+  %Head = task(Id, _Where, _When),
+  %member(task(Id, _, _), RestTasks), !,
+
   remove_duplicates(RestTasks, RestResult).
