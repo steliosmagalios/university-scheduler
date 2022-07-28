@@ -77,28 +77,89 @@ professor_constraints([professor(Id, _Availability) | RestProfs], Lectures, Task
 
 
 
-
+%%% group_constraints/3.
+%%% group_constraints(+Groups, +Lectures, +Tasks).
 
 group_constraints([], _Lectures, _Tasks).
 
-group_constraints([group(Id, _Members, Overlapping) | Groups], Lectures, Tasks) :-
-  group_constraints(Groups, Lectures, Tasks),
+group_constraints([group(Id, _MemberCount, Overlapping) | RestGroups], Lectures, Tasks) :-
+  group_constraints(RestGroups, Lectures, Tasks),
 
-  % Get all lectures that this group and
-  % all the overlapping ones are in.
+  % Get all lectures that this group and the
+  % overlapping groups are in, and remove the duplicates
   get_lectures_of_groups([Id | Overlapping], Lectures, FilteredLectures),
-  % filter(Lectures, is_group_in_lecture, [[Id | Overlapping]], FilteredLectures),
+  remove_duplicate_lectures(FilteredLectures, UniqueLectures),
 
-  % Get the tasks for these lectures and remove duplicate tasks
-  map(FilteredLectures, get_id, [], LectureIds),
-  filter(Tasks, id_in_list, [LectureIds], FilteredTasks),
-  remove_duplicates(FilteredTasks, UniqueTasks),
+  % Get the tasks for these lectures and extract the variables from them
+  map(UniqueLectures, get_id, [], UniqueLectureIds),
+  filter(Tasks, id_in_list, [UniqueLectureIds], FilteredTasks),
+  map(UniqueLectures, map_lecture_to_vars, [FilteredTasks], GroupVars), 
 
-  % Get the variables
-  map(FilteredLectures, map_lecture_to_vars, [UniqueTasks], VarList),
-
-  split_list(VarList, StartList, DurList),
+  % Split the variables and apply disjunctive constraints
+  split_list(GroupVars, StartList, DurList),
   apply_disjunctive(StartList, DurList).
+
+
+
+remove_duplicate_lectures(Lectures, UniqueLectures) :-
+  map(Lectures, get_id, [], LectureIds),
+  remove_duplicates(LectureIds, UniqueLectureIds),
+  ids_to_lectures(UniqueLectureIds, Lectures, UniqueLectures).
+
+
+
+ids_to_lectures([], _Lectures, []).
+
+ids_to_lectures([CurrId | RestIds], Lectures, [CurrLecture | RestLectures]) :-
+  ids_to_lectures(RestIds, Lectures, RestLectures),
+  get_lecture_by_id(CurrId, Lectures, CurrLecture).
+
+
+get_lecture_by_id(_Id, [], _) :- !, fail.
+
+get_lecture_by_id(Id, [CurrLec | _RestLectures], CurrLec) :-
+  CurrLec =.. [_Pred, Id | _RestArgs], !.
+
+get_lecture_by_id(Id, [_CurrLec | RestLectures], CurrLec) :-
+  get_lecture_by_id(Id, RestLectures, CurrLec).
+
+
+%%% remove_duplicates/2.
+%%% remove_duplicates(+List, -UniqueList).
+%%% This predicate accepts a list and return the unique elements of the list.
+
+remove_duplicates([], []).
+
+remove_duplicates([Id | RestList], [Id | RestUnique]) :-
+  remove_duplicates(RestList, RestUnique),
+  not(member(Id, RestList)), !.
+
+remove_duplicates([_Id | RestList], RestUnique) :-
+  remove_duplicates(RestList, RestUnique).
+
+
+
+
+% group_constraints([], _Lectures, _Tasks).
+
+% group_constraints([group(Id, _Members, Overlapping) | Groups], Lectures, Tasks) :-
+%   group_constraints(Groups, Lectures, Tasks),
+
+%   % Get all lectures that this group and
+%   % all the overlapping ones are in.
+%   get_lectures_of_groups([Id | Overlapping], Lectures, FilteredLectures),
+%   % filter(Lectures, is_group_in_lecture, [[Id | Overlapping]], FilteredLectures),
+
+%   % Get the tasks for these lectures and remove duplicate tasks
+%   map(FilteredLectures, get_id, [], LectureIds),
+%   filter(Tasks, id_in_list, [LectureIds], FilteredTasks),
+%   remove_duplicates(FilteredTasks, UniqueTasks), % <-- maybe it doesn't work
+
+%   % Get the variables
+%   map(FilteredLectures, map_lecture_to_vars, [UniqueTasks], VarList), % <-- introduces same variables
+
+%   split_list(VarList, StartList, DurList),
+%   apply_disjunctive(StartList, DurList).
 
 
 
@@ -168,17 +229,17 @@ get_total_number_of_students(LecGroups, Groups, TotalStudents) :-
 
 
 
-% remove_duplicates(List, Result).
-remove_duplicates([], []).
+% % remove_duplicates(List, Result).
+% remove_duplicates([], []). % <-- remove duplicates on ids
 
-remove_duplicates([Head | RestTasks], [Head | RestResult]) :-
-  %Head = task(_Id, _Where, _When),
-  not(member(Head, RestTasks)), !,
+% remove_duplicates([Head | RestTasks], [Head | RestResult]) :-
+%   %Head = task(_Id, _Where, s_When),
+%   not(member(Head, RestTasks)), !,
 
-  remove_duplicates(RestTasks, RestResult).
+%   remove_duplicates(RestTasks, RestResult).
 
-remove_duplicates([_Head | RestTasks], RestResult) :-
-  %Head = task(Id, _Where, _When),
-  %member(task(Id, _, _), RestTasks), !,
+% remove_duplicates([_Head | RestTasks], RestResult) :-
+%   %Head = task(Id, _Where, _When),
+%   %member(task(Id, _, _), RestTasks), !,
 
-  remove_duplicates(RestTasks, RestResult).
+%   remove_duplicates(RestTasks, RestResult).

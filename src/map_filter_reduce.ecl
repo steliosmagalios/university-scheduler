@@ -82,3 +82,15 @@ is_group_in_lecture(lecture(_Id, _Duration, _Type, _Profs, Groups), GroupId) :-
   member(GroupId, Groups).
 
 get_when(task(_Id, _Where, When), When).
+
+
+list_from_ids(Id, Item, ListOfItems) :-
+  first_occurrence(Id, Item, ListOfItems).
+
+first_occurrence(Id, _Item, []) :- fail.
+
+first_occurrence(Id, Item, [Item | Rest]) :-
+  Item =.. [_Pred, Id | _Rest], !.
+
+first_occurrence(Id, Item, [_Item | Rest]) :-
+  first_occurrence(Id, Item, Rest).
