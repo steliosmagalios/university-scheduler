@@ -2,9 +2,94 @@
 
 :- lib(ic).
 :- lib(ic_global).
+:- lib(ic_edge_finder).
 
+% Exports
+:- export split_list/3.
+:- export unpack_at/3.
+:- export apply_disjunctive/2.
+:- export remove_duplicates/2.
 :- export custom_mod/3.
 :- export alternative/5. 
+
+
+
+
+
+%%% split_list/3.
+%%% split_list(+List, -Starts, -Durations).
+%%%
+%%% This predicate splits a list of tuples into two lists,
+%%% one containing the starts and the other containing the durations.
+%%% The tuples are assumed to be of the form (Start, Duration).
+
+%%% The list is empty
+split_list([], [], []).
+
+%%% At least one element
+split_list([(Var1, Var2) | RestVars], [Var1 | RestList1], [Var2 | RestList2]) :-
+  split_list(RestVars, RestList1, RestList2).
+
+
+
+
+
+%%% unpack_at/2.
+%%% unpack_at(+AtFacts, -Starts, -Durations).
+%%%
+%%% This predicate accepts a list of at facts and splits them into
+%%% a list of start variables and a list of durations.
+
+%%% The list is empty
+unpack_at([], [], []).
+
+%%% At least one element
+unpack_at([at(_Id, Start, Dur) | RestAts], [Start | Starts], [Dur | Durations]) :-
+  unpack_at(RestAts, Starts, Durations).
+
+
+
+
+
+%%% apply_disjunctive/2.
+%%% apply_disjunctive(+Starts, +Durations).
+%%%
+%%% This predicate is a wrapper for the disjunctive constraint
+%%% of the ic_edge_finder library. The sole purpose of this predicate
+%%% is to not fail if the list of variables is empty.
+
+%%% If the lists are empty, don't do anything.
+apply_disjunctive([], []) :- !.
+
+%%% Else, apply disjunctive
+apply_disjunctive(Starts, Durations) :-
+  % Ensure the lists are not empty
+  Starts \= [], Durations \= [], 
+
+  % Apply disjunctive 
+  disjunctive(Starts, Durations).
+
+
+
+
+
+%%% remove_duplicates/2.
+%%% remove_duplicates(+List, -UniqueList).
+%%%
+%%% This predicate accepts a list and return the unique elements of the list.
+
+%%% Base case
+remove_duplicates([], []).
+
+%%% The current element does not appear in the rest of 
+%%% the list, so add it to the unique list.
+remove_duplicates([Id | RestList], [Id | RestUnique]) :-
+  remove_duplicates(RestList, RestUnique),
+  not(member(Id, RestList)), !.
+
+%%% The search continues.
+remove_duplicates([_Id | RestList], RestUnique) :-
+  remove_duplicates(RestList, RestUnique).
 
 
 
