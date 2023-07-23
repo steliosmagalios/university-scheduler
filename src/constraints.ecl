@@ -50,7 +50,7 @@ lecture_constraints(
 
   % Create the When variable and apply time constraints
   [When] #:: WhenDomain,
-  EndTime #= When + Duration,
+  ensure(When, WhenDomain, Duration),
 
   % Lecture must start and end in the same day
   custom_mod(When, 14, StartMod),
@@ -64,6 +64,15 @@ lecture_constraints(
   % Add the current AtList to the final AtList
   append(RestAtList, CurrAtList, AtList).
 
+
+
+ensure(_, _, 0) :- !.
+
+ensure(Var, Domain, Duration) :-
+  [Y] #:: Domain,
+  Y #= Var + Duration - 1,
+  NewD is Duration - 1,
+  ensure(Var, Domain, NewD).
 
 
 
