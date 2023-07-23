@@ -15,7 +15,7 @@
 
 %%% test predicate used for testing the program %%%
 test_schedule(Tasks) :-
-  findall(lecture(Id, Duration, Profs, Groups, Type), lecture(Id, Duration, Profs, Groups, Type), Lectures),
+  findall(lecture(Id, Duration, Type, Profs, Groups), lecture(Id, Duration, Type, Profs, Groups), Lectures),
   findall(group(Id, Count, Overlapping), group(Id, Count, Overlapping), Groups),
   findall(room(Id, Type, Capacity, Times), room(Id, Type, Capacity, Times), Rooms),
   findall(professor(Id, Times), professor(Id, Times), Professors),
