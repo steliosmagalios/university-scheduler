@@ -10,6 +10,7 @@
 :- export apply_disjunctive/2.
 :- export remove_duplicates/2.
 :- export custom_mod/3.
+:- export custom_div/3.
 :- export alternative/5. 
 
 

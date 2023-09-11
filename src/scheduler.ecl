@@ -56,8 +56,23 @@ schedule(Lectures, Professors, Groups, Rooms, Tasks) :-
 calculate_optimization_value(Tasks, Goal) :-
   % FIXME: Makespan here is for placeholder purposes.
   map(Tasks, get_when, [], Whens),
-  ic_global:maxlist(Whens, Goal).
+  transform_whens(Whens, Values),
+  ic_global:maxlist(Values, Goal).
 
+
+
+%%% transform_whens/2
+%%% transform_whens(+Whens, -Transformed).
+%%% This predicate applies the following arithmetic extression to every When variable to bound them in the space [1..14]
+%%% The expression is ((X div 14) + X) mod 15, where X is a When variable. This assignment is necessary to calculate the correct optimization value.
+
+transform_whens([], []) :- !.
+
+transform_whens([When | Whens], [Value | Transformed]) :-
+  custom_div(When, 14, DayIndex),
+  NewHour #= DayIndex + When,
+  custom_mod(NewHour, 15, Value),
+  transform_whens(Whens, Transformed).
 
 
 
