@@ -87,9 +87,9 @@ get_when(task(_Id, _Where, When), When).
 list_from_ids(Id, Item, ListOfItems) :-
   first_occurrence(Id, Item, ListOfItems).
 
-first_occurrence(Id, _Item, []) :- fail.
+first_occurrence(_Id, _Item, []) :- fail.
 
-first_occurrence(Id, Item, [Item | Rest]) :-
+first_occurrence(Id, Item, [Item | __Rest]) :-
   Item =.. [_Pred, Id | _Rest], !.
 
 first_occurrence(Id, Item, [_Item | Rest]) :-
