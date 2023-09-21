@@ -12,6 +12,7 @@
 :- export custom_mod/3.
 :- export custom_div/3.
 :- export alternative/5. 
+:- export calculate_time_in_mod/2.
 
 
 
@@ -159,3 +160,13 @@ labelAt([]).
 labelAt([at(Room, St, D) | Rest]):-
 	labeling([Room, St, D]),
 	labelAt(Rest).
+
+
+
+
+
+calculate_time_in_mod(Time, TimeInMod) :-
+  TimeMinusOne #= Time - 1,
+  custom_div(TimeMinusOne, 14, Day),
+  T #= Day + Time,
+  custom_mod(T, 15, TimeInMod).

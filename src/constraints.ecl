@@ -53,8 +53,8 @@ lecture_constraints(
   EndTime #= When + Duration,
 
   % Lecture must start and end in the same day
-  custom_mod(When, 14, StartMod),
-  custom_mod(EndTime, 14, EndMod),
+  calculate_time_in_mod(When, StartMod),
+  calculate_time_in_mod(EndTime, EndMod),
   StartMod #< EndMod,
 
 
