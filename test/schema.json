@@ -1,0 +1,145 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "properties": {
+    "lectures": {
+      "type": "array",
+      "items": [
+        {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "integer"
+            },
+            "type": {
+              "type": "string",
+              "enum": [
+                "Aud",
+                "Lab"
+              ]
+            },
+            "duration": {
+              "type": "integer"
+            },
+            "professors": {
+              "type": "array",
+              "items": [
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "groups": {
+              "type": "array",
+              "items": [
+                {
+                  "type": "integer"
+                }
+              ]
+            }
+          },
+          "required": [
+            "id",
+            "type",
+            "duration",
+            "professors",
+            "groups"
+          ]
+        }
+      ]
+    },
+    "professors": {
+      "type": "array",
+      "items": [
+        {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "integer"
+            },
+            "availability": {
+              "type": "array",
+              "items": [
+                {
+                  "type": "integer"
+                }
+              ]
+            }
+          },
+          "required": [
+            "id",
+            "availability"
+          ]
+        }
+      ]
+    },
+    "groups": {
+      "type": "array",
+      "items": [
+        {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "integer"
+            },
+            "size": {
+              "type": "integer"
+            },
+            "overlapping": {
+              "type": "array",
+              "items": {}
+            }
+          },
+          "required": [
+            "id",
+            "size",
+            "overlapping"
+          ]
+        }
+      ]
+    },
+    "rooms": {
+      "type": "array",
+      "items": [
+        {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "integer"
+            },
+            "type": {
+              "type": "string",
+              "enum": [
+                "Aud",
+                "Lab"
+              ]
+            },
+            "capacity": {
+              "type": "integer"
+            },
+            "availability": {
+              "type": "array",
+              "items": [
+                {
+                  "type": "integer"
+                }
+              ]
+            }
+          },
+          "required": [
+            "id",
+            "type",
+            "capacity",
+            "availability"
+          ]
+        }
+      ]
+    }
+  },
+  "required": [
+    "lectures",
+    "professors",
+    "groups",
+    "rooms"
+  ]
+}
