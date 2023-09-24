@@ -1,6 +1,6 @@
 from time import time
 from requests import post
-
+import sys
 
 SERVER_ADDRESS='http://localhost'
 SERVER_PORT=5000
@@ -19,9 +19,11 @@ if __name__ == '__main__':
   import glob
 
   files = glob.glob(os.path.join(os.path.dirname(__file__), 'tests', '*.json'))
+  files.sort(key=lambda x: os.path.basename(x))
 
   results = []
-  for file in files:
+  for (file, idx) in zip(files, range(len(files))):
+    print(f"Running test {idx + 1}/{len(files)} ({os.path.basename(file)})",  file=sys.stderr)
     results.append(perform_test(file))
   
   results.sort(key=lambda x: x[0])
